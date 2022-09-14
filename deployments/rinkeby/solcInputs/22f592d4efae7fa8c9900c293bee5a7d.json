@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/Bank.sol": {
+      "content": "// SPDX-License-Identifier: UNLICENSED\r\npragma solidity 0.8.9;\r\n\r\nerror Bank__NotOwner();\r\n\r\n/** \r\n    @title Bank Contract Recieves Amount and Allows to Withdraw the Amount\r\n    @author Haris Aqeel\r\n*/\r\n\r\ncontract Bank {\r\n    address immutable owner;\r\n    address[] private funders;\r\n    uint8 constant MINIMUM_AMOUNT = 0;\r\n    mapping(address => uint256) private balances;\r\n\r\n    // constructor\r\n    // receive function (if exists)\r\n    // fallback function (if exists)\r\n    // external\r\n    // public\r\n    // internal\r\n    // private\r\n\r\n    modifier onlyOwner() {\r\n        if (msg.sender != owner) revert Bank__NotOwner();\r\n        _;\r\n    }\r\n\r\n    constructor() {\r\n        owner = msg.sender;\r\n    }\r\n\r\n    receive() external payable {\r\n        deposit();\r\n    }\r\n\r\n    fallback() external payable {\r\n        deposit();\r\n    }\r\n\r\n    /** \r\n        @notice getContractBalance function returns the balance of contract to the owner\r\n    */\r\n    function getContractBalance() external view onlyOwner returns (uint256) {\r\n        return address(this).balance;\r\n    }\r\n\r\n    /** \r\n        @notice getFunderBalance function returns the balance of funder\r\n    */\r\n    function getFunderBalance(address fundersAddress)\r\n        external\r\n        view\r\n        returns (uint256)\r\n    {\r\n        return balances[fundersAddress];\r\n    }\r\n\r\n    /** \r\n        @notice deposit function allows the funders to fund this bank contract\r\n    */\r\n    function deposit() public payable {\r\n        require(msg.value > MINIMUM_AMOUNT, \"Amount Entered is Lesser!\");\r\n        funders.push(msg.sender);\r\n        balances[msg.sender] += msg.value;\r\n    }\r\n\r\n    /** \r\n        @notice Owner is able to withdraw funds present in this contract (Bank)\r\n    */\r\n    function withdraw() public payable onlyOwner {\r\n        address[] memory balanceFunders = funders;\r\n\r\n        for (\r\n            uint256 funderIndex = 0;\r\n            funderIndex < balanceFunders.length;\r\n            funderIndex++\r\n        ) {\r\n            address funder = balanceFunders[funderIndex];\r\n            balances[funder] = 0;\r\n        }\r\n\r\n        funders = new address[](0);\r\n        (bool success, ) = payable(msg.sender).call{\r\n            value: address(this).balance\r\n        }(\"\");\r\n        require(success, \"Call to Withdraw Funds Failed\");\r\n    }\r\n}\r\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
